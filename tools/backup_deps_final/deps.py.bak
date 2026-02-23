@@ -1,0 +1,42 @@
+import uuid
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from core.security import decode_token
+from db.postgres import get_session
+from models.user import User
+
+bearer = HTTPBearer()
+
+async def get_current_user(
+    creds: HTTPAuthorizationCredentials = Depends(bearer),
+    session: AsyncSession = Depends(get_session),
+) -> User:
+    try:
+        payload = decode_token(creds.credentials)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token')
+
+    sub = payload.get('sub')
+    if not sub:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token')
+
+    try:
+        user_id = uuid.UUID(sub)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token')
+
+    res = await session.execute(select(User).where(User.id == user_id))
+    user = res.scalar_one_or_none()
+    if not user or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User inactive')
+
+    return user
+
+def require_superuser(user: User = Depends(get_current_user)) -> User:
+    if not user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Forbidden')
+    return user

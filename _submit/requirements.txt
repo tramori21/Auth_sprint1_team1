@@ -1,0 +1,12 @@
+﻿fastapi
+uvicorn[standard]
+pydantic<2
+SQLAlchemy[asyncio]
+asyncpg
+alembic
+redis
+passlib[bcrypt]
+python-jose[cryptography]
+pytest
+pytest-cov
+httpx
