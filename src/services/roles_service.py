@@ -27,7 +27,10 @@ class RolesService:
         return res.scalars().all()
 
     @staticmethod
-    async def update_role(session: AsyncSession, role_id: str, name: str) -> Role:
+    async def update_role(
+            session: AsyncSession,
+            role_id: str,
+            name: str) -> Role:
         try:
             rid = uuid.UUID(role_id)
         except ValueError:
@@ -112,7 +115,10 @@ class RolesService:
         return True
 
     @staticmethod
-    async def check(session: AsyncSession, user_id: str, role_name: str) -> bool:
+    async def check(
+            session: AsyncSession,
+            user_id: str,
+            role_name: str) -> bool:
         try:
             uid = uuid.UUID(user_id)
         except ValueError:

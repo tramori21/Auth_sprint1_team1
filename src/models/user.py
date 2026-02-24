@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from datetime import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, String
@@ -18,6 +18,15 @@ class User(Base):
     is_superuser = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    roles = relationship('UserRole', back_populates='user', cascade='all, delete-orphan')
-    login_history = relationship('LoginHistory', back_populates='user', cascade='all, delete-orphan')
-    refresh_tokens = relationship('RefreshToken', back_populates='user', cascade='all, delete-orphan')
+    roles = relationship(
+        'UserRole',
+        back_populates='user',
+        cascade='all, delete-orphan')
+    login_history = relationship(
+        'LoginHistory',
+        back_populates='user',
+        cascade='all, delete-orphan')
+    refresh_tokens = relationship(
+        'RefreshToken',
+        back_populates='user',
+        cascade='all, delete-orphan')

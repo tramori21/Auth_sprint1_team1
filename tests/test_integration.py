@@ -75,3 +75,57 @@ def test_auth_flow_refresh_logout_history_rbac():
 
     r = httpx.post(f"{BASE}/api/v1/roles/revoke", json={"user_id": user_id, "role_name": role_name}, headers=admin_headers, timeout=10)
     assert r.status_code == 200, r.text
+def test_change_password():
+    login = f"user_pw_{_rnd()}"
+    password_old = f"Old_{_rnd()}!"
+    password_new = f"New_{_rnd()}!"
+    email = f"{login}@test.local"
+
+    r = httpx.post(f"{BASE}/api/v1/auth/signup", json={"login": login, "password": password_old, "email": email}, timeout=10)
+    assert r.status_code in (200, 201)
+
+    r = httpx.post(f"{BASE}/api/v1/auth/login", json={"login": login, "password": password_old, "email": email}, timeout=10)
+    assert r.status_code == 200
+    access = r.json()["access_token"]
+
+    r = httpx.put(
+        f"{BASE}/api/v1/users/me/password",
+        headers={"Authorization": f"Bearer {access}"},
+        json={"old_password": password_old, "new_password": password_new},
+        timeout=10,
+    )
+    assert r.status_code == 204
+
+    r = httpx.post(f"{BASE}/api/v1/auth/login", json={"login": login, "password": password_old, "email": email}, timeout=10)
+    assert r.status_code == 401
+
+    r = httpx.post(f"{BASE}/api/v1/auth/login", json={"login": login, "password": password_new, "email": email}, timeout=10)
+    assert r.status_code == 200
+
+
+def test_change_login():
+    login_old = f"user_login_{_rnd()}"
+    login_new = f"user_login_new_{_rnd()}"
+    password = f"Pass_{_rnd()}!"
+    email = f"{login_old}@test.local"
+
+    r = httpx.post(f"{BASE}/api/v1/auth/signup", json={"login": login_old, "password": password, "email": email}, timeout=10)
+    assert r.status_code in (200, 201)
+
+    r = httpx.post(f"{BASE}/api/v1/auth/login", json={"login": login_old, "password": password, "email": email}, timeout=10)
+    assert r.status_code == 200
+    access = r.json()["access_token"]
+
+    r = httpx.put(
+        f"{BASE}/api/v1/users/me/login",
+        headers={"Authorization": f"Bearer {access}"},
+        json={"new_login": login_new},
+        timeout=10,
+    )
+    assert r.status_code == 204
+
+    r = httpx.post(f"{BASE}/api/v1/auth/login", json={"login": login_old, "password": password, "email": email}, timeout=10)
+    assert r.status_code == 401
+
+    r = httpx.post(f"{BASE}/api/v1/auth/login", json={"login": login_new, "password": password, "email": email}, timeout=10)
+    assert r.status_code == 200

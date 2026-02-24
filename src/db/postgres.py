@@ -11,9 +11,13 @@ dsn = (
 )
 
 engine = create_async_engine(dsn, echo=False, future=True)
-async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+async_session = sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False)
 
 from models import user, role, user_role, login_history, refresh_token  # noqa: F401,E402
+
 
 async def get_session() -> AsyncSession:
     async with async_session() as session:

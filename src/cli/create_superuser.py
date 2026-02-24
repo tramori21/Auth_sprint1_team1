@@ -1,4 +1,4 @@
-﻿import argparse
+import argparse
 import asyncio
 
 from sqlalchemy import select

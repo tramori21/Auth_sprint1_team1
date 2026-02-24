@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.deps import require_superuser
@@ -18,7 +18,9 @@ async def create_role(
     try:
         role = await RolesService.create_role(session, data.name)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e))
     return {"id": str(role.id), "name": role.name}
 
 
@@ -41,7 +43,9 @@ async def update_role(
     try:
         role = await RolesService.update_role(session, role_id, data.name)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e))
     return {"id": str(role.id), "name": role.name}
 
 
@@ -54,7 +58,9 @@ async def delete_role(
     try:
         await RolesService.delete_role(session, role_id)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e))
     return {"status": "ok"}
 
 
@@ -67,7 +73,9 @@ async def assign(
     try:
         await RolesService.assign(session, data.user_id, data.role_name)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e))
     return {"status": "ok"}
 
 
@@ -80,7 +88,9 @@ async def revoke(
     try:
         await RolesService.revoke(session, data.user_id, data.role_name)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e))
     return {"status": "ok"}
 
 

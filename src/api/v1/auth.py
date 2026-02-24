@@ -13,44 +13,64 @@ from services.auth_service import AuthService
 router = APIRouter()
 
 
-@router.post('/signup', response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-async def signup(data: UserCreate, session: AsyncSession = Depends(get_session)):
+@router.post('/signup', response_model=TokenResponse,
+             status_code=status.HTTP_201_CREATED)
+async def signup(
+        data: UserCreate,
+        session: AsyncSession = Depends(get_session)):
     try:
         access, refresh, _ = await AuthService.register(session, data.login, data.password)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e))
     return TokenResponse(access_token=access, refresh_token=refresh)
 
 
 @router.post('/login', response_model=TokenResponse)
-async def login(request: Request, data: UserLogin, session: AsyncSession = Depends(get_session)):
+async def login(
+        request: Request,
+        data: UserLogin,
+        session: AsyncSession = Depends(get_session)):
     try:
         access, refresh, user = await AuthService.login(session, data.login, data.password)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e))
 
     ip = request.client.host if request.client else None
     ua = request.headers.get('user-agent')
-    session.add(LoginHistory(user_id=user.id, ip=ip, user_agent=ua, success=True))
+    session.add(
+        LoginHistory(
+            user_id=user.id,
+            ip=ip,
+            user_agent=ua,
+            success=True))
     await session.commit()
 
     return TokenResponse(access_token=access, refresh_token=refresh)
 
 
 @router.post('/refresh', response_model=TokenResponse)
-async def refresh(data: RefreshRequest, session: AsyncSession = Depends(get_session)):
+async def refresh(
+        data: RefreshRequest,
+        session: AsyncSession = Depends(get_session)):
     try:
         access, refresh, _ = await AuthService.refresh(session, data.refresh_token)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e))
     return TokenResponse(access_token=access, refresh_token=refresh)
 
 
 @router.post('/logout')
-async def logout(data: LogoutRequest, session: AsyncSession = Depends(get_session)):
+async def logout(
+        data: LogoutRequest,
+        session: AsyncSession = Depends(get_session)):
     await AuthService.logout(session, data.refresh_token)
     return {'status': 'ok'}
-
 
 
 @router.get("/profile")
@@ -67,7 +87,9 @@ async def update_profile(
     if data.login and data.login != user.login:
         exists = (await session.execute(select(User).where(User.login == data.login))).scalar_one_or_none()
         if exists:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Login already exists')
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail='Login already exists')
         user.login = data.login
 
     if data.password:
@@ -79,7 +101,9 @@ async def update_profile(
 
 
 @router.get('/login-history')
-async def login_history(user: User = Depends(get_current_user), session: AsyncSession = Depends(get_session)):
+async def login_history(
+        user: User = Depends(get_current_user),
+        session: AsyncSession = Depends(get_session)):
     res = await session.execute(
         select(LoginHistory)
         .where(LoginHistory.user_id == user.id)
@@ -87,7 +111,7 @@ async def login_history(user: User = Depends(get_current_user), session: AsyncSe
         .limit(20)
     )
     items = res.scalars().all()
-    return [
-        {'ip': i.ip, 'user_agent': i.user_agent, 'success': i.success, 'created_at': i.created_at.isoformat()}
-        for i in items
-    ]
+    return [{'ip': i.ip,
+             'user_agent': i.user_agent,
+             'success': i.success,
+             'created_at': i.created_at.isoformat()} for i in items]

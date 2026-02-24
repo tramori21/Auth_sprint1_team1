@@ -40,7 +40,10 @@ class AuthService:
         if res.scalar_one_or_none():
             raise ValueError("User already exists")
 
-        user = User(login=login, password=hash_password(password), is_active=True)
+        user = User(
+            login=login,
+            password=hash_password(password),
+            is_active=True)
         session.add(user)
         await session.commit()
         await session.refresh(user)
@@ -78,7 +81,8 @@ class AuthService:
         token_obj = (
             await session.execute(select(RefreshToken).where(RefreshToken.token == refresh_token))
         ).scalar_one_or_none()
-        if (not token_obj) or token_obj.is_revoked or (token_obj.expires_at < datetime.utcnow()):
+        if (not token_obj) or token_obj.is_revoked or (
+                token_obj.expires_at < datetime.utcnow()):
             raise ValueError("Refresh token expired or revoked")
 
         user = (await session.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
